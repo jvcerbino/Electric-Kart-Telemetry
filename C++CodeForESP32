@@ -1,0 +1,54 @@
+#include <LiquidCrystal_I2C.h>
+#include <Arduino.h>
+
+#define ENC_PORTA1 7
+#define ENC_PORTA2 8
+LiquidCrystal_I2C lcd(0x20, 16, 2);
+int pulso = 0;
+long int ultimo = 0;
+int rpmMotor = 0, velo = 0, rpmRodas = 0;
+const int PI = 3;
+const int DIAM_RODAS = 26;
+
+void contarPulso(){ //count the encoder pulser
+  pulso++;
+}
+
+void setup()
+{
+  Serial.begin(115200); //this rate was chosen to minimize errors at higher rpm
+  pinMode(ENC_PORTA1, INPUT);
+  pinMode(ENC_PORTA2, INPUT);
+
+  attachInterrupt(digitalPinToInterrupt(ENC_PORTA1), contarPulso, RISING);
+
+  lcd.begin(16,2);
+  lcd.backlight();
+  lcd.setCursor(4,0);
+  lcd.print("TESLA-UFMG");
+  delay(3000);
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("SPEED");
+  lcd.setCursor(10,0);
+  lcd.print("KM/H");
+  lcd.setCursor(0,1);
+  lcd.print("MOTOR RPM");
+  ultimo = millis();
+}
+
+void loop()
+{
+  
+  if (millis() - ultimo >= 800){ //show speed every 800ms
+    rpmMotor = ((contarPulso) / 4) * 60; //enconder chosen has quadratic outputs
+    rpmRodas = (rpmMotor / 3);
+    velo = ((rpmRodas * DIAM_RODAS * PI * 60) / pow(10,5);
+    lcd.setCursor(7,0);
+    lcd.print(velo);
+    lcd.setCursor(10,0);
+    lcd.print(rpmMotor);
+    contarPulso = 0;
+    ultimo = millis();
+  }
+}
